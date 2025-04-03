@@ -1,0 +1,123 @@
+modules:
+  proxy:
+    http:
+      valid_status_codes: [200, 301, 302, 303, 401, 400, 403, 404, 307, 500, 502, 503]
+      fail_if_not_ssl: false
+      proxy_url: http://lcmc-webproxy.lcmchealth.org:3128
+      ip_protocol_fallback: false
+      follow_redirects: false
+      method: GET
+      preferred_ip_protocol: ip4
+    prober: http
+    timeout: 45s
+  strict_tls:
+    http:
+      valid_status_codes: [200]
+      fail_if_not_ssl: true
+      tls_config:
+        insecure_skip_verify: true
+        min_version: TLS11
+        max_version: TLS13
+      ip_protocol_fallback: false
+      method: GET
+      follow_redirects: true
+      preferred_ip_protocol: ip4
+      valid_http_versions:
+        - HTTP/1.1
+        - HTTP/2.0
+    prober: http
+    timeout: 45s
+  http_2xx: 
+    http:
+      valid_status_codes: [200, 301, 302, 303, 401, 400, 403, 404, 307, 500, 502, 503]
+      fail_if_not_ssl: false
+      tls_config:
+        insecure_skip_verify: true
+        min_version: TLS10
+        max_version: TLS12
+      ip_protocol_fallback: false
+      method: GET
+      follow_redirects: false
+      preferred_ip_protocol: ip4
+      #valid_status_codes: [200,401,403,404]
+      valid_http_versions: 
+        - HTTP/1.1
+        - HTTP/2.0
+    prober: http
+    timeout: 45s
+  smtp_starttls:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      query_response:
+        - expect: "^220 (.+) ESMTP (.+)$"
+        - send: "EHLO prober\r"
+        - expect: "^250-STARTTLS"
+        - send: "STARTTLS\r"
+        - expect: "^220"
+        - starttls: true
+        - send: "EHLO prober\r"
+        - expect: "(^250-VRFY|^250 XRDST)"
+        - send: "QUIT\r"
+  ftp_starttls:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      query_response:
+        - expect: "^220 (.+)$"
+        - send: "AUTH TLS\r"
+        - expect: "^234 (.+)$"
+        - starttls: true
+        - send: "QUIT\r"
+      tls_config:
+        insecure_skip_verify: true
+      preferred_ip_protocol: ip4
+  tls_connect:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      preferred_ip_protocol: ip4
+      tls: true
+      tls_config:
+        insecure_skip_verify: true
+        min_version: TLS10
+  tls_connect_tls12:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      preferred_ip_protocol: ip4
+      tls: true
+      tls_config:
+        insecure_skip_verify: true
+        min_version: TLS10
+        max_version: TLS12
+  dns_udp_example:
+    prober: dns
+    timeout: 5s
+    dns:
+      query_name: "sts.lcmchealth.org"
+      query_type: "A"
+      valid_rcodes:
+        - NOERROR
+  ssh_banner:
+    prober: tcp
+    tcp:
+      query_response:
+      - expect: "^SSH-2.0-"
+  tcp_connect:
+    prober: tcp
+  dns_kms:
+    prober: dns
+    timeout: 5s
+    dns:
+      query_name: "_vlmcs._tcp.lcmchealth.org"
+      query_type: "SRV"
+      valid_rcodes:
+        - NOERROR
+      validate_answer_rrs:
+        fail_if_not_matches_regexp:
+          - "_vlmcs._tcp.lcmchealth.org.\t3600\tIN\tSRV\t0 0 1688 lcmc-kms(.*?)"
+  icmp_ipv4:
+   prober: icmp
+   icmp:
+     preferred_ip_protocol: ip4

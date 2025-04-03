@@ -1,0 +1,9 @@
+- targets:
+    - epic-kpr-sapph:9182
+    - epic-sp-sapph:9182
+    - epic-smtp-sapph:9182
+    - epic-msql-sapph:9182
+    - epc-awshsw-c01:9182
+    - epc-awshsw-c02:9182
+  labels:
+    customer: AWS_Lab

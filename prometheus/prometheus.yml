@@ -1,0 +1,87 @@
+# my global config
+global:
+  scrape_interval: 2m # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 2m # Evaluate rules every 15 seconds. The default is every 1 minute.
+  scrape_timeout: 2m
+  # scrape_timeout is set to the global default (10s).
+
+# Alertmanager configuration
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#            - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+# rule_files:
+#    - "/promconfig/rules/alerts.yml"
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels:
+          customer: AWS_Lab
+
+  - job_name: "windows"
+    scheme: https
+    file_sd_configs:
+      - files:
+        - /promconfig/file_sd_configs/windows/*.yml
+    relabel_configs:
+    #remove port from instance name
+    - source_labels: [__address__]
+      regex: "([^:]+):.+"
+      target_label: instance
+      replacement: "$1"
+    tls_config:
+      ca_file: /promconfig/ca.crt
+      cert_file: /promconfig/auth.crt
+      key_file: /promconfig/auth.key
+
+  - job_name: "AWS_Lab"
+    scheme: https
+    file_sd_configs:
+      - files:
+        - /promconfig/file_sd_configs/linux/*.yml
+    relabel_configs:
+    #remove port from instance name
+    - source_labels: [__address__]
+      regex: "([^:]+):.+"
+      target_label: instance
+      replacement: "$1"
+    tls_config:
+      ca_file: /promconfig/ca.crt
+      cert_file: /promconfig/auth.crt
+      key_file: /promconfig/auth.key
+
+  - job_name: 'epic-ssh'
+    metrics_path: /probe
+    params:
+      module: [ssh_banner]
+    file_sd_configs:
+      - files:
+        - /promconfig/file_sd_configs/ssh/*.yml
+    relabel_configs:
+      # Ensure port is 22, pass as URL parameter
+      - source_labels: [__address__]
+        regex: (.*?)(:.*)?
+        replacement: ${1}:22
+        target_label: __param_target
+      # Make instance label the target
+      - source_labels: [__param_target]
+        #regex: "([^:]+):\\d+"
+        target_label: instance
+      # Actually talk to the blackbox exporter though
+      - target_label: __address__
+        replacement: blackbox_exporter:9115
+
+remote_write:
+  - url: https://prometheus.sapphirehealth.org/api/v1/write
+    basic_auth:
+      username: admin
+      password: 'Pr0M3theu$!'
+    write_relabel_configs:
+    - source_labels: [customer]
+      regex: 'AWS_Lab'
+      action: keep

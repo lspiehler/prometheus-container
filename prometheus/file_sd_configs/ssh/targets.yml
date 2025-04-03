@@ -1,0 +1,5 @@
+- targets:
+    - tstodb:9100
+    - ansible01:9100
+  labels:
+    customer: AWS_Lab

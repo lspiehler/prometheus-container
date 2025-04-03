@@ -1,0 +1,84 @@
+services:
+  watchtower:
+    image: containrrr/watchtower:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - prometheus
+    ports:
+      - '8080:8080'
+    container_name: watchtower
+    environment:
+      - TZ=America/Chicago
+      # - WATCHTOWER_NOTIFICATIONS=email
+      # - WATCHTOWER_NOTIFICATION_EMAIL_FROM=watchtower@lcmchealth.org
+      # - WATCHTOWER_NOTIFICATION_EMAIL_TO=lyas.spiehler@sapphirehealth.org
+      # - WATCHTOWER_NOTIFICATION_EMAIL_SERVER=relay.lcmchealth.org
+      # - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_TLS_SKIP_VERIFY=true
+      # - WATCHTOWER_NOTIFICATION_EMAIL_DELAY=2
+      #- WATCHTOWER_HTTP_API_TOKEN=51f913d0-726d-4222-ae97-8d40c7fb4b23
+      #- WATCHTOWER_HTTP_API_METRICS=true
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_NO_STARTUP_MESSAGE=true
+      - WATCHTOWER_SCHEDULE=0 0 23 * * *
+  blackbox_exporter:
+    container_name: blackbox_exporter
+    image: prom/blackbox-exporter:latest
+    restart: unless-stopped
+    networks:
+      - prometheus
+    extra_hosts:
+      - "tstodb:10.248.13.10"
+      - "ansible01:host-gateway"
+    ports:
+      - 9115:9115
+    volumes:
+      - /var/docker/prometheus/blackbox_exporter:/config
+    command:
+      - '--config.file=/config/blackbox.yml'
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    networks:
+      - prometheus
+    extra_hosts:
+      - "epic-kpr-sapph:10.248.13.4"
+      - "tstodb:10.248.13.10"
+      - "epic-sp-sapph:10.248.13.5"
+      - "epic-smtp-sapph:10.248.13.9"
+      - "ansible01:host-gateway"
+      - "epic-msql-sapph:10.248.13.6"
+      - "epc-awshsw-c01:10.248.13.7"
+      - "epc-awshsw-c02:10.248.13.8"
+    ports:
+      - 9090:9090
+    volumes:
+      - /var/docker/prometheus/prometheus:/promconfig
+      - prometheus:/prometheus
+    # labels:
+    #   - com.centurylinklabs.watchtower.depends-on=alertmanager
+    restart: unless-stopped
+    command:
+      - '--web.enable-lifecycle'
+      - '--config.file=/promconfig/prometheus.yml'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.external-url=https://prometheus.lcmchealth.org'
+      - '--storage.tsdb.retention.time=7d'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  prometheus:
+networks:
+  prometheus:
+    ipam:
+      driver: default
+      config:
+      - subnet: 192.168.100.0/24
+        ip_range: 192.168.100.0/25
+        gateway: 192.168.100.1
