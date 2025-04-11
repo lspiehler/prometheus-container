@@ -12,12 +12,12 @@ services:
     environment:
       - TZ=America/Chicago
       # - WATCHTOWER_NOTIFICATIONS=email
-      # - WATCHTOWER_NOTIFICATION_EMAIL_FROM=watchtower@lcmchealth.org
+      # - WATCHTOWER_NOTIFICATION_EMAIL_FROM=
       # - WATCHTOWER_NOTIFICATION_EMAIL_TO=lyas.spiehler@sapphirehealth.org
-      # - WATCHTOWER_NOTIFICATION_EMAIL_SERVER=relay.lcmchealth.org
+      # - WATCHTOWER_NOTIFICATION_EMAIL_SERVER=
       # - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_TLS_SKIP_VERIFY=true
       # - WATCHTOWER_NOTIFICATION_EMAIL_DELAY=2
-      #- WATCHTOWER_HTTP_API_TOKEN=51f913d0-726d-4222-ae97-8d40c7fb4b23
+      #- WATCHTOWER_HTTP_API_TOKEN=
       #- WATCHTOWER_HTTP_API_METRICS=true
       - WATCHTOWER_CLEANUP=true
       - WATCHTOWER_NO_STARTUP_MESSAGE=true
@@ -29,8 +29,9 @@ services:
     networks:
       - prometheus
     extra_hosts:
-      - "tstodb:10.248.13.10"
-      - "ansible01:host-gateway"
+      - "azwu2todbtst001.bh.bozemanhealth.org:10.40.36.4"
+      - "azwu2todbtrn001.bh.bozemanhealth.org:10.40.36.5"
+      - "azwu2nans001.bh.bozemanhealth.org:host-gateway"
     ports:
       - 9115:9115
     volumes:
@@ -43,14 +44,9 @@ services:
     networks:
       - prometheus
     extra_hosts:
-      - "epic-kpr-sapph:10.248.13.4"
-      - "tstodb:10.248.13.10"
-      - "epic-sp-sapph:10.248.13.5"
-      - "epic-smtp-sapph:10.248.13.9"
-      - "ansible01:host-gateway"
-      - "epic-msql-sapph:10.248.13.6"
-      - "epc-awshsw-c01:10.248.13.7"
-      - "epc-awshsw-c02:10.248.13.8"
+      - "azwu2todbtst001.bh.bozemanhealth.org:10.40.36.4"
+      - "azwu2todbtrn001.bh.bozemanhealth.org:10.40.36.5"
+      - "azwu2nans001.bh.bozemanhealth.org:host-gateway"
     ports:
       - 9090:9090
     volumes:
@@ -65,7 +61,7 @@ services:
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--storage.tsdb.path=/prometheus'
-      - '--web.external-url=https://prometheus.lcmchealth.org'
+      - '--web.external-url=https://prometheus.bozemanhealth.org'
       - '--storage.tsdb.retention.time=7d'
     logging:
       driver: "json-file"

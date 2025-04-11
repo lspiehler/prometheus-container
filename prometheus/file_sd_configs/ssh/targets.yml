@@ -1,5 +1,6 @@
 - targets:
-    - tstodb:9100
-    - ansible01:9100
+    - azwu2todbtst001.bh.bozemanhealth.org:22
+    - azwu2todbtrn001.bh.bozemanhealth.org:22
+    - azwu2nans001.bh.bozemanhealth.org:22
   labels:
-    customer: AWS_Lab
+    customer: Bozeman

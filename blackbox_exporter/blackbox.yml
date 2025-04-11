@@ -1,15 +1,4 @@
 modules:
-  proxy:
-    http:
-      valid_status_codes: [200, 301, 302, 303, 401, 400, 403, 404, 307, 500, 502, 503]
-      fail_if_not_ssl: false
-      proxy_url: http://lcmc-webproxy.lcmchealth.org:3128
-      ip_protocol_fallback: false
-      follow_redirects: false
-      method: GET
-      preferred_ip_protocol: ip4
-    prober: http
-    timeout: 45s
   strict_tls:
     http:
       valid_status_codes: [200]
@@ -91,14 +80,6 @@ modules:
         insecure_skip_verify: true
         min_version: TLS10
         max_version: TLS12
-  dns_udp_example:
-    prober: dns
-    timeout: 5s
-    dns:
-      query_name: "sts.lcmchealth.org"
-      query_type: "A"
-      valid_rcodes:
-        - NOERROR
   ssh_banner:
     prober: tcp
     tcp:
@@ -106,17 +87,6 @@ modules:
       - expect: "^SSH-2.0-"
   tcp_connect:
     prober: tcp
-  dns_kms:
-    prober: dns
-    timeout: 5s
-    dns:
-      query_name: "_vlmcs._tcp.lcmchealth.org"
-      query_type: "SRV"
-      valid_rcodes:
-        - NOERROR
-      validate_answer_rrs:
-        fail_if_not_matches_regexp:
-          - "_vlmcs._tcp.lcmchealth.org.\t3600\tIN\tSRV\t0 0 1688 lcmc-kms(.*?)"
   icmp_ipv4:
    prober: icmp
    icmp:
